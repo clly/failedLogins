@@ -9,10 +9,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/alecthomas/kingpin/v2"
 	"github.com/clly/failedLogins/assets"
-	"github.com/gemsi/grok"
-	"github.com/jehiah/strftime"
-	"gopkg.in/alecthomas/kingpin.v2"
+	"github.com/vjeantet/grok"
 )
 
 var (
@@ -25,7 +24,11 @@ func main() {
 	kingpin.Parse()
 	absolutePath, err := filepath.Abs(*file)
 	assets.RestoreAssets("/tmp", "patterns")
-	parser := grok.NewWithConfig(&grok.Config{NamedCapturesOnly: true})
+	parser, err := grok.NewWithConfig(&grok.Config{NamedCapturesOnly: true})
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 	parser.AddPatternsFromPath("/tmp/patterns")
 	if err != nil {
 		fmt.Println(err)
@@ -50,7 +53,7 @@ func main() {
 			ipMap[ip]++
 		}
 	}
-	dateFormat := strftime.Format("%Y%m%d", time.Now())
+	dateFormat := time.Now().Format(time.DateOnly)
 	dateReportPath := fmt.Sprintf(reportPath, dateFormat)
 	fmt.Println(dateReportPath)
 	wfd, err := os.OpenFile(dateReportPath, os.O_RDWR, 0666)
